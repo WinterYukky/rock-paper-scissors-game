@@ -32,40 +32,39 @@ export const useHandClassification = (modelId: string) => {
         score: 0,
       }
   )
+  const err = ref()
 
   onMounted(async () => {
-    const URL = `https://teachablemachine.withgoogle.com/models/${modelId}`
-    const modelURL = `${URL}/model.json`
-    const metadataURL = `${URL}/metadata.json`
-    const model = await tmImage.load(modelURL, metadataURL)
-    const webcam = new tmImage.Webcam(200, 200, false)
+    try {
+      const URL = `https://teachablemachine.withgoogle.com/models/${modelId}`
+      const modelURL = `${URL}/model.json`
+      const metadataURL = `${URL}/metadata.json`
+      const model = await tmImage.load(modelURL, metadataURL)
+      const webcam = new tmImage.Webcam(200, 200, false)
 
-    // IOSの不具合対策
-    const video = await webcam.getWebcam()
-    video.setAttribute('autoplay', '')
-    video.setAttribute('muted', '')
-    video.setAttribute('playsinline', '')
+      await webcam.setup()
+      await webcam.play()
+      canvas.value ??= webcam.canvas
+      canvas.value.height = webcam.height
+      canvas.value.width = webcam.width
+      webcam.canvas = canvas.value
 
-    await webcam.setup()
-    await webcam.play()
-    canvas.value ??= webcam.canvas
-    canvas.value.height = webcam.height
-    canvas.value.width = webcam.width
-    webcam.canvas = canvas.value
-
-    const predict = async () => {
-      const predictions = await model.predict(webcam.canvas)
-      hands.value = predictions.map((prediction) => ({
-        name: prediction.className as Hand,
-        score: prediction.probability,
-      }))
-    }
-    const loop = async () => {
-      webcam.update()
-      await predict()
+      const predict = async () => {
+        const predictions = await model.predict(webcam.canvas)
+        hands.value = predictions.map((prediction) => ({
+          name: prediction.className as Hand,
+          score: prediction.probability,
+        }))
+      }
+      const loop = async () => {
+        webcam.update()
+        await predict()
+        window.requestAnimationFrame(loop)
+      }
       window.requestAnimationFrame(loop)
+    } catch (error) {
+      err.value = error
     }
-    window.requestAnimationFrame(loop)
   })
   return {
     /**
@@ -80,5 +79,6 @@ export const useHandClassification = (modelId: string) => {
      * 最高スコアの手
      */
     highestHand,
+    err,
   }
 }

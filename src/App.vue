@@ -5,7 +5,7 @@ import { useRandomHand } from './useRandomHand'
 import ThePlayerHandCard from './components/ThePlayerHandCard.vue'
 import { computed } from 'vue'
 
-const { hands, highestHand, canvas } = useHandClassification('2Noi5kfjA')
+const { hands, highestHand, canvas, err } = useHandClassification('2Noi5kfjA')
 const { currentHand: enemyHand } = useRandomHand()
 const isWin = computed(() => {
   switch (highestHand.value.name) {
@@ -52,4 +52,5 @@ const isWin = computed(() => {
       </the-player-hand-card>
     </div>
   </div>
+  <div>{{ err }}</div>
 </template>
