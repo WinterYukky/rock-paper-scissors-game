@@ -38,9 +38,13 @@ export const useHandClassification = (modelId: string) => {
     const modelURL = `${URL}/model.json`
     const metadataURL = `${URL}/metadata.json`
     const model = await tmImage.load(modelURL, metadataURL)
-    model.getClassLabels
-
     const webcam = new tmImage.Webcam(200, 200, false)
+
+    // IOSの不具合対策
+    webcam.webcam.setAttribute('autoplay', '')
+    webcam.webcam.setAttribute('muted', '')
+    webcam.webcam.setAttribute('playsinline', '')
+
     await webcam.setup()
     await webcam.play()
     canvas.value ??= webcam.canvas
