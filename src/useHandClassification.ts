@@ -41,9 +41,10 @@ export const useHandClassification = (modelId: string) => {
     const webcam = new tmImage.Webcam(200, 200, false)
 
     // IOSの不具合対策
-    webcam.webcam.setAttribute('autoplay', '')
-    webcam.webcam.setAttribute('muted', '')
-    webcam.webcam.setAttribute('playsinline', '')
+    const video = await webcam.getWebcam()
+    video.setAttribute('autoplay', '')
+    video.setAttribute('muted', '')
+    video.setAttribute('playsinline', '')
 
     await webcam.setup()
     await webcam.play()
