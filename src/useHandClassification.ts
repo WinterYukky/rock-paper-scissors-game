@@ -41,6 +41,8 @@ export const useHandClassification = (modelId: string) => {
 
     const webcam = new tmImage.Webcam(200, 200, false)
     await webcam.setup()
+    webcam.webcam.setAttribute('playsinline', '')
+    webcam.webcam.setAttribute('muted', '')
     await webcam.play()
     canvas.value ??= webcam.canvas
     canvas.value.height = webcam.height
