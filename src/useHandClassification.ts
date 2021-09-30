@@ -33,15 +33,13 @@ export const useHandClassification = (modelId: string) => {
       }
   )
   const err = ref()
+  const model = ref<tmImage.CustomMobileNet>()
+  const loading = computed(() => !model.value)
+  const ready = ref(true)
 
-  onMounted(async () => {
+  const start = async () => {
     try {
-      const URL = `https://teachablemachine.withgoogle.com/models/${modelId}`
-      const modelURL = `${URL}/model.json`
-      const metadataURL = `${URL}/metadata.json`
-      const model = await tmImage.load(modelURL, metadataURL)
       const webcam = new tmImage.Webcam(200, 200, false)
-
       await webcam.setup()
       await webcam.play()
       canvas.value ??= webcam.canvas
@@ -50,7 +48,8 @@ export const useHandClassification = (modelId: string) => {
       webcam.canvas = canvas.value
 
       const predict = async () => {
-        const predictions = await model.predict(webcam.canvas)
+        if (!model.value) return
+        const predictions = await model.value.predict(webcam.canvas)
         hands.value = predictions.map((prediction) => ({
           name: prediction.className as Hand,
           score: prediction.probability,
@@ -62,9 +61,17 @@ export const useHandClassification = (modelId: string) => {
         window.requestAnimationFrame(loop)
       }
       window.requestAnimationFrame(loop)
+      ready.value = false
     } catch (error) {
       err.value = error
     }
+  }
+
+  onMounted(async () => {
+    const URL = `https://teachablemachine.withgoogle.com/models/${modelId}`
+    const modelURL = `${URL}/model.json`
+    const metadataURL = `${URL}/metadata.json`
+    model.value = await tmImage.load(modelURL, metadataURL)
   })
   return {
     /**
@@ -79,6 +86,9 @@ export const useHandClassification = (modelId: string) => {
      * 最高スコアの手
      */
     highestHand,
+    loading,
+    start,
+    ready,
     err,
   }
 }

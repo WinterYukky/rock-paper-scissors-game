@@ -5,7 +5,8 @@ import { useRandomHand } from './useRandomHand'
 import ThePlayerHandCard from './components/ThePlayerHandCard.vue'
 import { computed } from 'vue'
 
-const { hands, highestHand, canvas, err } = useHandClassification('2Noi5kfjA')
+const { hands, highestHand, canvas, err, loading, ready, start } =
+  useHandClassification('2Noi5kfjA')
 const { currentHand: enemyHand } = useRandomHand()
 const isWin = computed(() => {
   switch (highestHand.value.name) {
@@ -30,7 +31,27 @@ const isWin = computed(() => {
       </v-card>
     </div>
     <canvas class="m-4 rounded-md flex-1" ref="canvas"></canvas>
-    <div class="flex">
+    <!-- ロード中画面 -->
+    <div v-if="loading" class="flex justify-center text-xl">準備中...</div>
+    <!-- 開始ボタン画面 ※IOSではユーザー操作で開始しないとカメラが起動できない -->
+    <div v-else-if="ready" class="flex justify-center text-xl">
+      <button
+        class="
+          bg-blue-400
+          hover:bg-blue-300
+          text-white
+          font-bold
+          py-2
+          px-4
+          rounded
+        "
+        @click="start()"
+      >
+        開始
+      </button>
+    </div>
+    <!-- ゲーム画面 -->
+    <div v-else div class="flex">
       <the-player-hand-card
         :class="{
           'bg-blue-200': !isWin,
