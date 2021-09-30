@@ -32,46 +32,34 @@ export const useHandClassification = (modelId: string) => {
         score: 0,
       }
   )
-  const err = ref()
-  const model = ref<tmImage.CustomMobileNet>()
-  const loading = computed(() => !model.value)
-  const ready = ref(true)
-
-  const start = async () => {
-    try {
-      const webcam = new tmImage.Webcam(200, 200, false)
-      await webcam.setup()
-      await webcam.play()
-      canvas.value ??= webcam.canvas
-      canvas.value.height = webcam.height
-      canvas.value.width = webcam.width
-      webcam.canvas = canvas.value
-
-      const predict = async () => {
-        if (!model.value) return
-        const predictions = await model.value.predict(webcam.canvas)
-        hands.value = predictions.map((prediction) => ({
-          name: prediction.className as Hand,
-          score: prediction.probability,
-        }))
-      }
-      const loop = async () => {
-        webcam.update()
-        await predict()
-        window.requestAnimationFrame(loop)
-      }
-      window.requestAnimationFrame(loop)
-      ready.value = false
-    } catch (error) {
-      err.value = error
-    }
-  }
 
   onMounted(async () => {
     const URL = `https://teachablemachine.withgoogle.com/models/${modelId}`
     const modelURL = `${URL}/model.json`
     const metadataURL = `${URL}/metadata.json`
-    model.value = await tmImage.load(modelURL, metadataURL)
+    const model = await tmImage.load(modelURL, metadataURL)
+
+    const webcam = new tmImage.Webcam(200, 200, false)
+    await webcam.setup()
+    await webcam.play()
+    canvas.value ??= webcam.canvas
+    canvas.value.height = webcam.height
+    canvas.value.width = webcam.width
+    webcam.canvas = canvas.value
+
+    const predict = async () => {
+      const predictions = await model.predict(webcam.canvas)
+      hands.value = predictions.map((prediction) => ({
+        name: prediction.className as Hand,
+        score: prediction.probability,
+      }))
+    }
+    const loop = async () => {
+      webcam.update()
+      await predict()
+      window.requestAnimationFrame(loop)
+    }
+    window.requestAnimationFrame(loop)
   })
   return {
     /**
@@ -86,9 +74,5 @@ export const useHandClassification = (modelId: string) => {
      * 最高スコアの手
      */
     highestHand,
-    loading,
-    start,
-    ready,
-    err,
   }
 }
